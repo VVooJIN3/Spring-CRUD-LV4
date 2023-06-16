@@ -27,7 +27,7 @@ public class BlogService {
         return blogResponseDto;
     }
 
-    public Long updateMemo(Long id, BlogRequestDto requestDto) {
+    public Long updateBlog(Long id, BlogRequestDto requestDto) {
         // 해당 게시글이 DB에 존재하는지 확인
         Blog blog = blogRepository.findById(id);
         if (blog != null) {
@@ -46,6 +46,16 @@ public class BlogService {
             // memo 삭제
             blogRepository.delete(id);
             return id;
+        } else {
+            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
+        }
+    }
+
+    public BlogResponseDto getBlog(Long id) {
+        Blog blog = blogRepository.findById(id);
+        if (blog != null) {
+
+            return blogRepository.findOne(id);
         } else {
             throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
         }

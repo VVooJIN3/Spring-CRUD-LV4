@@ -88,4 +88,18 @@ public class BlogRepository {
         jdbcTemplate.update(sql, id);
     }
 
+    public BlogResponseDto findOne(Long id) {
+        String sql = "SELECT * FROM blog WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, new Object[]{id}, new RowMapper<BlogResponseDto>() {
+            @Override
+            public BlogResponseDto mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Long blogId = rs.getLong("id");
+                String title = rs.getString("title");
+                String username = rs.getString("username");
+                String contents = rs.getString("contents");
+                LocalDateTime dateTime = rs.getTimestamp("datetime").toLocalDateTime();
+                return new BlogResponseDto(blogId, title, username, contents, dateTime);
+            }
+        });
+    }
 }

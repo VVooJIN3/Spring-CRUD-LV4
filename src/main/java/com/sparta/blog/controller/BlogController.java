@@ -30,6 +30,7 @@ public class BlogController {
     public BlogResponseDto getBlog(@PathVariable Long id) {
         return blogService.getBlog(id);
     }
+
     @PutMapping("/blogs/{id}")
     public Long updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto requestDto) {
         return blogService.updateBlog(id, requestDto);

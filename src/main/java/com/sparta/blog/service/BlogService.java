@@ -5,6 +5,7 @@ import com.sparta.blog.dto.BlogResponseDto;
 import com.sparta.blog.repository.BlogRepository;
 import com.sparta.blog.entity.Blog;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class BlogService {
     }
 
     public List<BlogResponseDto> getBlogs() {
-        return blogRepository.findAll();
+        return blogRepository.findAllByOrderByModifiedAtDesc().stream().map(BlogResponseDto::new).toList();
     }
 
     public BlogResponseDto createBlog(BlogRequestDto requestDto) {
@@ -27,11 +28,12 @@ public class BlogService {
         return blogResponseDto;
     }
 
+    @Transactional
     public Long updateBlog(Long id, BlogRequestDto requestDto) {
         // 해당 게시글이 DB에 존재하는지 확인
-        Blog blog = blogRepository.findById(id);
+        Blog blog = findBlog(id);
         if (blog != null) {
-            blogRepository.update(id, requestDto);
+            blog.update(requestDto);
 
             return id;
         } else {
@@ -41,10 +43,10 @@ public class BlogService {
 
     public Long deleteBlog(Long id) {
         // 해당 게시글이 DB에 존재하는지 확인
-        Blog blog = blogRepository.findById(id);
+        Blog blog =findBlog(id);
         if (blog != null) {
             // memo 삭제
-            blogRepository.delete(id);
+            blogRepository.delete(blog);
             return id;
         } else {
             throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
@@ -52,12 +54,19 @@ public class BlogService {
     }
 
     public BlogResponseDto getBlog(Long id) {
-        Blog blog = blogRepository.findById(id);
+        Blog blog = findBlog(id);
         if (blog != null) {
 
-            return blogRepository.findOne(id);
+            return new BlogResponseDto(blog);
         } else {
             throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
         }
+
+    }
+
+    private Blog findBlog(Long id){
+        return blogRepository.findById(id).orElseThrow(()->
+                new IllegalArgumentException("선택한 메모는 존재하지 않습니다.")
+        );
     }
 }

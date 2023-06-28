@@ -28,15 +28,27 @@ public class Blog extends Timestamped {
     @Column(name = "contents", nullable = false, length = 500)
     private String contents;
 
-    public Blog(BlogRequestDto requestDto){
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+//    public Blog(BlogRequestDto requestDto){
+//        this.title = requestDto.getTitle();
+//        this.username = requestDto.getUsername();
+//        this.contents = requestDto.getContents();
+//    }
+
+    public Blog(BlogRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
-        this.username = requestDto.getUsername();
+//        this.username = requestDto.getUsername();
+        this.username = user.getUsername();
         this.contents = requestDto.getContents();
+        this.user = user;
     }
 
-    public void update(BlogRequestDto requestDto) {
+    public void update(BlogRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
-        this.username = requestDto.getUsername();
+        this.username = user.getUsername();
         this.contents = requestDto.getContents();
     }
 }

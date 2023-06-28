@@ -2,9 +2,8 @@ package com.sparta.blog.controller;
 
 import com.sparta.blog.dto.SignupRequestDto;
 import com.sparta.blog.service.UserService;
-import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
-import org.springframework.stereotype.Controller;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Slf4j
-@Controller
+@RestController
 @RequestMapping("/api")
 public class UserController {
 
@@ -24,12 +23,12 @@ public class UserController {
 
     @GetMapping("/user/login-page")
     public String loginPage() {
-        return "login";
+        return "로그인 페이지";
     }
 
     @GetMapping("/user/signup")
     public String signupPage() {
-        return "signup";
+        return "회원가입 페이지";
     }
 
     @PostMapping("/user/signup")
@@ -49,4 +48,5 @@ public class UserController {
 //        return "redirect:/api/user/login-page";
         return "회원가입 완료";
     }
+
 }

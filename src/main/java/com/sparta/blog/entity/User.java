@@ -21,16 +21,20 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    public User(String username, String password, String email){
+    @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING) // enum의 이름 그대로를 저장 USER -> USER
+    private UserRoleEnum role;
+
+    public User(String username, String password, String email, UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.role = role;
     }
-
 }

@@ -4,6 +4,7 @@ import com.sparta.blog.dto.BlogRequestDto;
 import com.sparta.blog.dto.BlogResponseDto;
 import com.sparta.blog.security.UserDetailsImpl;
 import com.sparta.blog.service.BlogService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @RequestMapping("/api")
 public class BlogController {
     private final BlogService blogService;
+    HttpServletResponse response;
 
     public BlogController(BlogService blogService) {
         this.blogService = blogService;
@@ -20,28 +22,33 @@ public class BlogController {
 
     @PostMapping("/blogs")
     public BlogResponseDto createBlog(@RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return blogService.createBlog(requestDto,userDetails.getUser());
+        BlogResponseDto responseDto =blogService.createBlog(requestDto,userDetails.getUser());
+        return responseDto;
     }
 
     @GetMapping("/blogs")
     public List<BlogResponseDto> getBlogs() {
-        return blogService.getBlogs();
+        List<BlogResponseDto> responseDtos =blogService.getBlogs();
+        return responseDtos;
     }
 
     @GetMapping("/blogs/{id}")
     public BlogResponseDto getBlog(@PathVariable Long id) {
-        return blogService.getBlog(id);
+        BlogResponseDto responseDto = blogService.getBlog(id);
+        return responseDto;
     }
 
     @PutMapping("/blogs/{id}")
     public BlogResponseDto updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return blogService.updateBlog(id, requestDto,userDetails.getUser());
+        BlogResponseDto responseDto = blogService.updateBlog(id, requestDto,userDetails.getUser());
+        return responseDto;
 
     }
 
     @DeleteMapping("/blogs/{id}")
-    public Long deleteBlog(@PathVariable Long id,@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return blogService.deleteBlog(id,userDetails.getUser());
+    public String deleteBlog(@PathVariable Long id,@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        blogService.deleteBlog(id,userDetails.getUser());
+        return "삭제 완료되었습니다.";
 
     }
 }

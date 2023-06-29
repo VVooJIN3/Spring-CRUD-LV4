@@ -2,8 +2,11 @@ package com.sparta.blog.controller;
 
 import com.sparta.blog.dto.SignupRequestDto;
 import com.sparta.blog.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -33,20 +36,20 @@ public class UserController {
 
     @PostMapping("/user/signup")
     @ResponseBody
-    public String signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
-
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
 //        //validation 예외처리
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+        StringBuilder errorMessage = new StringBuilder();
         if (fieldErrors.size() > 0) {
             for (FieldError fieldError : bindingResult.getFieldErrors()) {
                 log.error(fieldError.getField() + " 필드 : " + fieldError.getDefaultMessage());
+                errorMessage.append(fieldError.getDefaultMessage()).append("\n");
             }
-            return "redirect:/api/user/signup";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage.toString());
         }
-        userService.signup(requestDto);
+        String result = userService.signup(requestDto);
 
-//        return "redirect:/api/user/login-page";
-        return "회원가입 완료";
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
 }

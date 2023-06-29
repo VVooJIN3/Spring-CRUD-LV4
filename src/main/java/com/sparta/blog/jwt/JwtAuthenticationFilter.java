@@ -42,6 +42,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             log.error(e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+
+
     }
 
     @Override
@@ -50,13 +52,30 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
         UserRoleEnum role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
 
+        response.setStatus(200);
         String token = jwtUtil.createToken(username, role);
         jwtUtil.addJwtToCookie(token, response);
+
+        // 응답 데이터 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+        String responseBody = objectMapper.writeValueAsString("Login successed");
+        // 응답 전송
+        response.getWriter().write(responseBody);
+        response.getWriter().flush();
+        response.getWriter().close();
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         log.info("로그인 실패");
         response.setStatus(401);//401 - UnAuthorized
+
+        // 응답 데이터 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+        String responseBody = objectMapper.writeValueAsString("Login failed");
+        // 응답 전송
+        response.getWriter().write(responseBody);
+        response.getWriter().flush();
+        response.getWriter().close();
     }
 }

@@ -1,5 +1,6 @@
 package com.sparta.blog.service;
 
+import com.sparta.blog.dto.ApiResponseDto;
 import com.sparta.blog.dto.LoginRequestDto;
 import com.sparta.blog.dto.SignupRequestDto;
 import com.sparta.blog.entity.User;
@@ -16,10 +17,8 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
     HttpServletResponse response;
-
     private final JwtUtil jwtUtil;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil){
@@ -30,25 +29,23 @@ public class UserService {
 
     private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
-    public String signup(SignupRequestDto requestDto) {
+    public ApiResponseDto signup(SignupRequestDto requestDto) {
 
         String username = requestDto.getUsername();
         String password = passwordEncoder.encode(requestDto.getPassword());
-        String result;
-        //회원 중복 확인
-        Optional<User> checkUsername = userRepository.findByUsername(username);
-        if (checkUsername.isPresent()) {
-//            throw new IllegalArgumentException("중복된 username입니다.");
-            result = "이미 존재하는 username입니다.";
 
-            return result;
-        }
+        //회원 중복 확인
+        //DB에 이미 존재하는 username으로 회원가입을 요청한 경우
+        // "중복된 username 입니다." 라는 에러메시지와 statusCode: 400을 Client에 반환하기
+        Optional<User> checkUsername = userRepository.findByUsername(username);
+        if (checkUsername.isPresent())
+            throw new IllegalArgumentException("중복된 username입니다.");
+
         String email = requestDto.getEmail();
         Optional<User> checkEmail = userRepository.findByEmail(email);
-        if (checkEmail.isPresent()) {
-//            throw new IllegalArgumentException("중복된 Email입니다.");
-            return "이미 존재하는 email입니다.";
-        }
+        if (checkEmail.isPresent())
+            throw new IllegalArgumentException("중복된 Email입니다.");
+
         // 사용자 ROLE 확인
         UserRoleEnum role = UserRoleEnum.USER;
         if (requestDto.isAdmin()) {
@@ -60,6 +57,6 @@ public class UserService {
 
         User user = new User(username, password, email, role);
         userRepository.save(user);
-        return "회원가입에 성공했습니다.";
+        return new ApiResponseDto("회원가입 완료");
     }
 }

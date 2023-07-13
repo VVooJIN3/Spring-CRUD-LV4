@@ -1,150 +1,96 @@
 package com.sparta.blog.service;
 
-import com.sparta.blog.dto.BlogRequestDto;
-import com.sparta.blog.dto.BlogResponseDto;
-import com.sparta.blog.dto.ReplyRequestDto;
-import com.sparta.blog.dto.ReplyResponseDto;
+import com.sparta.blog.dto.*;
 import com.sparta.blog.entity.Reply;
 import com.sparta.blog.entity.User;
 import com.sparta.blog.repository.BlogRepository;
 import com.sparta.blog.entity.Blog;
 import com.sparta.blog.repository.ReplyRepository;
+import com.sparta.blog.repository.UserRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Component
+@Service
 public class BlogService {
     private final BlogRepository blogRepository;
-    private final ReplyRepository replyRepository;
-    public BlogService(BlogRepository blogRepository,ReplyRepository replyRepository ) {
+    private final UserRepository userRepository;
+
+    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
+
+    public BlogService(BlogRepository blogRepository, ReplyRepository replyRepository, UserRepository userRepository) {
         this.blogRepository = blogRepository;
-        this.replyRepository = replyRepository;
+        this.userRepository = userRepository;
     }
 
     public List<BlogResponseDto> getBlogs() {
         return blogRepository.findAllByOrderByModifiedAtDesc().stream().map(BlogResponseDto::new).toList();
     }
 
-    public Blog createBlog(BlogRequestDto requestDto, User user) {
-        Blog blog = new Blog(requestDto, user);
+    @Transactional
+    public BlogResponseDto createBlog(BlogRequestDto requestDto, User user) {
+        // DB에 존재하는 유저인지 검증
+        User loginedUser = findUser(user.getUsername());
+
+        Blog blog = new Blog(requestDto, loginedUser);
         blogRepository.save(blog);
-        return blog;
+        return new BlogResponseDto(blog);
+
     }
 
     @Transactional
-    public Blog updateBlog(Long id, BlogRequestDto requestDto, User user) {
+    public BlogResponseDto updateBlog(Long id, BlogRequestDto requestDto, User user) {
         // 해당 게시글이 DB에 존재하는지 확인
         Blog blog = findBlog(id);
-        if (blog != null) {
-            if(user.getUsername().equals(blog.getUsername())) {
-                blog.update(requestDto);
-                return  blog;
-            }
-            else{
-                throw new IllegalArgumentException("로그인한 작성자의 게시물이 아닙니다.");
-            }
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다. 수정할 수 없습니다.");
-        }
+
+        //DB에 존재하는 유저인지 + 게시글 작성자와 일치여부 확인
+        User loginedUser = findUser(user.getUsername());
+
+        // 사용자가 작성한 게시글이 아닌 경우에는
+        // “작성자만 삭제/수정할 수 있습니다.”라는 에러메시지와 statusCode: 400을 Client에 반환하기
+        if (!loginedUser.getUsername().equals(blog.getUsername()))
+            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
+
+        blog.update(requestDto);
+        return new BlogResponseDto(blog);
+
     }
 
-    public Long deleteBlog(Long id, User user) {
+    @Transactional
+    public ApiResponseDto deleteBlog(Long id, User user) {
         // 해당 게시글이 DB에 존재하는지 확인
-        Blog blog =findBlog(id);
-        if (blog != null) {
-            if(user.getUsername().equals(blog.getUsername())) {
-                blogRepository.delete(blog);
-                return id;
-            }else{
-                throw new IllegalArgumentException("로그인한 작성자의 게시물이 아닙니다. 삭제할 수 없습니다.");
-            }
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
-    }
-
-    public Blog getBlog(Long id) {
         Blog blog = findBlog(id);
-        if (blog != null) {
-            return blog;
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
+        // DB에 존재하는 유저인지 확인
+        User loginedUser = findUser(user.getUsername());
+        //게시글 작성자와 일치여부 확인
+        // 사용자가 작성한 게시글이 아닌 경우에는
+        // “작성자만 삭제/수정할 수 있습니다.”라는 에러메시지와 statusCode: 400을 Client에 반환하기
+        if (!loginedUser.getUsername().equals(blog.getUsername()))
+            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
 
+        blogRepository.delete(blog);
+        return new ApiResponseDto("선택한 게시글의 삭제를 완료했습니다.");
     }
 
-    private Blog findBlog(Long id){
-        return blogRepository.findById(id).orElseThrow(()->
+    public BlogResponseDto getBlog(Long id) {
+        // 해당 게시글이 DB에 존재하는지 확인
+        Blog blog = findBlog(id);
+        return new BlogResponseDto(blog);
+    }
+
+    private Blog findBlog(Long id) {
+        return blogRepository.findById(id).orElseThrow(() ->
                 new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.")
         );
     }
 
-    //reply----------------------------------
-
-    public Reply addReply(ReplyRequestDto requestDto, User user, Long blogId) {
-        Blog blog = findBlog(blogId);
-        if (blog != null) {
-            Reply reply = new Reply(requestDto, user, blog);
-            Reply saveReply = replyRepository.save(reply);
-            return reply;
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
-    }
-
-    public List<ReplyResponseDto> getReplies(Long blogId) {
-        Blog blog = findBlog(blogId);
-        if (blog != null) {
-            return replyRepository.findAllByOrderByModifiedAtDesc().stream().map(ReplyResponseDto::new).toList();
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
-    }
-
-    public Reply updateReply(Long blogId, ReplyRequestDto requestDto, User user, Long replyId) {
-        Blog blog = findBlog(blogId);
-        if (blog != null) {
-            Reply reply = findReply(replyId);
-            if (reply != null && reply.getBlog().getId() == blog.getId()) { // null이 아니고 게시글에 속한 댓글인 경우
-                if (user.getUsername().equals(reply.getUsername())) {
-                    reply.update(requestDto);
-                    return reply;
-                } else {
-                    throw new IllegalArgumentException("로그인한 작성자의 댓글이 아닙니다.");
-                }
-            } else {
-                throw new IllegalArgumentException("해당 게시물에서 선택한 댓글은 존재하지 않습니다.");
-            }
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
-    }
-
-
-    public String deleteReply(Long blogId, User user, Long replyId) {
-        Blog blog = findBlog(blogId);
-        if (blog != null) {
-            Reply reply = findReply(replyId);
-            if (reply != null) {
-                if (user.getUsername().equals(reply.getUsername())) {
-                    replyRepository.delete(reply);
-                    return blogId+"번 게시물의"+replyId+"번째 댓글 삭제 완료";
-                } else {
-                    throw new IllegalArgumentException("로그인한 작성자의 댓글이 아닙니다.");
-                }
-            } else {
-                throw new IllegalArgumentException("선택한 댓글은 존재하지 않습니다.");
-            }
-        } else {
-            throw new IllegalArgumentException("선택한 게시글은 존재하지 않습니다.");
-        }
-    }
-
-    private Reply findReply(Long id) {
-        return replyRepository.findById(id).orElseThrow(() ->
-                new IllegalArgumentException("선택한 댓글은 존재하지 않습니다.")
+    private User findUser(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() ->
+                new IllegalArgumentException("존재하지 않는 사용자 입니다.")
         );
+
     }
+
 }

@@ -1,12 +1,12 @@
 package com.sparta.blog.controller;
 
-import com.sparta.blog.dto.BlogRequestDto;
-import com.sparta.blog.dto.BlogResponseDto;
-import com.sparta.blog.dto.ReplyRequestDto;
-import com.sparta.blog.dto.ReplyResponseDto;
+import com.sparta.blog.dto.*;
 import com.sparta.blog.security.UserDetailsImpl;
 import com.sparta.blog.service.BlogService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,52 +22,41 @@ public class BlogController {
         this.blogService = blogService;
     }
 
+    //예외처리 메서드
+    //컨트롤러 내 API가 호출되다가 Exception 발생 시, 코드 실행
+    @ExceptionHandler
+    public ResponseEntity<ApiResponseDto> handleException(IllegalArgumentException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponseDto(ex.getMessage()));
+    }
+
+    //게시글 작성
     @PostMapping("/blogs")
-    public BlogResponseDto createBlog(@RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return new BlogResponseDto(blogService.createBlog(requestDto,userDetails.getUser()));
+    public ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(blogService.createBlog(requestDto, userDetails.getUser()));
     }
 
+    //게시글 조회(전체)
     @GetMapping("/blogs")
-    public List<BlogResponseDto> getBlogs() {
-        return blogService.getBlogs();
+    public ResponseEntity<BlogsResponseDto> getBlogs() {
+        return ResponseEntity.status(HttpStatus.OK).body(new BlogsResponseDto(blogService.getBlogs()));
     }
 
+    //게시글 조회(선택 id)
     @GetMapping("/blogs/{blogId}")
-    public BlogResponseDto getBlog(@PathVariable Long blogId) {
-        return new BlogResponseDto(blogService.getBlog(blogId));
+    public ResponseEntity<BlogResponseDto> getBlog(@PathVariable Long blogId) {
+        return ResponseEntity.status(HttpStatus.OK).body(blogService.getBlog(blogId));
     }
 
+    //게시글 수정(선택 id)
     @PutMapping("/blogs/{blogId}")
-    public BlogResponseDto updateBlog(@PathVariable Long blogId, @RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return new BlogResponseDto(blogService.updateBlog(blogId, requestDto,userDetails.getUser()));
+    public ResponseEntity<BlogResponseDto> updateBlog(@PathVariable Long blogId, @RequestBody BlogRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(blogService.updateBlog(blogId, requestDto,userDetails.getUser()));
     }
 
+    //게시글 삭제(선택 id)
     @DeleteMapping("/blogs/{blogId}")
-    public String deleteBlog(@PathVariable Long blogId,@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        blogService.deleteBlog(blogId,userDetails.getUser());
-        return "삭제 완료되었습니다.";
-
-    }
-//reply------------------------------------------------------------------------------------------------
-
-    @PostMapping("/blogs/{blogId}/replies")
-    public ReplyResponseDto addReply(@RequestBody ReplyRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long blogId) {
-        return new ReplyResponseDto(blogService.addReply(requestDto,userDetails.getUser(),blogId));
+    public ResponseEntity<ApiResponseDto> deleteBlog(@PathVariable Long blogId,@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(blogService.deleteBlog(blogId,userDetails.getUser()));
     }
 
-    @GetMapping("/blogs/{blogId}/replies")
-    public List<ReplyResponseDto> getReplies(@PathVariable Long blogId) {
-        return blogService.getReplies(blogId);
-    }
-
-
-    @PutMapping("/blogs/{blogId}/replies/{replyId}")
-    public ReplyResponseDto updateBlog(@PathVariable Long blogId, @RequestBody ReplyRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable Long replyId) {
-        return new ReplyResponseDto(blogService.updateReply(blogId, requestDto,userDetails.getUser(),replyId));
-    }
-
-    @DeleteMapping("/blogs/{blogId}/replies/{replyId}")
-    public String deleteReply(@PathVariable Long blogId,@AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable Long replyId) {
-        return blogService.deleteReply(blogId,userDetails.getUser(),replyId);
-    }
 }

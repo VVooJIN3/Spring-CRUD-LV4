@@ -1,5 +1,6 @@
 package com.sparta.blog.controller;
 
+import com.sparta.blog.dto.ApiResponseDto;
 import com.sparta.blog.dto.SignupRequestDto;
 import com.sparta.blog.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,13 @@ public class UserController {
         this.userService = userService;
     }
 
+    //예외처리 메서드
+    //컨트롤러 내 API가 호출되다가 Exception 발생 시, 코드 실행
+    @ExceptionHandler
+    public ResponseEntity<ApiResponseDto> handleException(IllegalArgumentException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponseDto(ex.getMessage()));
+    }
+
     @GetMapping("/user/login-page")
     public String loginPage() {
         return "로그인 페이지";
@@ -36,20 +44,20 @@ public class UserController {
 
     @PostMapping("/user/signup")
     @ResponseBody
-    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponseDto> signup(@Valid @RequestBody SignupRequestDto requestDto, BindingResult bindingResult) {
 //        //validation 예외처리
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         StringBuilder errorMessage = new StringBuilder();
+
+        //validation 예외가 1건 이상인 경우
         if (fieldErrors.size() > 0) {
             for (FieldError fieldError : bindingResult.getFieldErrors()) {
                 log.error(fieldError.getField() + " 필드 : " + fieldError.getDefaultMessage());
-                errorMessage.append(fieldError.getDefaultMessage()).append("\n");
+                errorMessage.append(fieldError.getDefaultMessage()).append(" ");
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage.toString());
+           throw new IllegalArgumentException(errorMessage.toString());
         }
-        String result = userService.signup(requestDto);
-
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.signup(requestDto));
     }
 
 }

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -23,8 +24,10 @@ public class Blog extends Timestamped {
 
     @Column(name = "title", nullable = false)
     private String title;
+
     @Column(name = "username", nullable = false)
     private String username;
+
     @Column(name = "contents", nullable = false, length = 500)
     private String contents;
 
@@ -32,15 +35,12 @@ public class Blog extends Timestamped {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-//    public Blog(BlogRequestDto requestDto){
-//        this.title = requestDto.getTitle();
-//        this.username = requestDto.getUsername();
-//        this.contents = requestDto.getContents();
-//    }
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
+    private List<Reply> replies;
+
 
     public Blog(BlogRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
-//        this.username = requestDto.getUsername();
         this.username = user.getUsername();
         this.contents = requestDto.getContents();
         this.user = user;
@@ -50,5 +50,7 @@ public class Blog extends Timestamped {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
     }
+
+
 }
 

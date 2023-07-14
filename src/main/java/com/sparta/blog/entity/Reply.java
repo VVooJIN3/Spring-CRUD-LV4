@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -23,19 +25,29 @@ public class Reply  extends Timestamped {
     @Column(nullable = false, unique = false,length = 500)
     private String comment;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blog_id", nullable = false)
     private Blog blog;
 
+    @OneToMany(mappedBy = "reply", cascade = CascadeType.REMOVE)
+    private List<ReplyLike> replyLikes;
+
+    private int likeCnt;
     public Reply (ReplyRequestDto requestDto, User user, Blog blog) {
 //        this.username = requestDto.getUsername();
         this.username = user.getUsername();
         this.comment = requestDto.getComment();
         this.blog= blog;
-
+        this.likeCnt = 0;
     }
     public void update(ReplyRequestDto requestDto) {
         this.comment = requestDto.getComment();
+    }
+
+    public void increaseLike(){
+        this.likeCnt++;
+    }
+    public void decreaseLike(){
+        this.likeCnt--;
     }
 }

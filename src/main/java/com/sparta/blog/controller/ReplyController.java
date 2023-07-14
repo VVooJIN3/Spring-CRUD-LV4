@@ -5,6 +5,7 @@ import com.sparta.blog.security.UserDetailsImpl;
 import com.sparta.blog.service.BlogService;
 import com.sparta.blog.service.ReplyService;
 import com.sun.net.httpserver.HttpsServer;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,14 @@ public class ReplyController {
 
     @DeleteMapping("/blogs/{blogId}/replies/{replyId}")
     public ResponseEntity<ApiResponseDto> deleteReply(@PathVariable Long blogId,@AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable Long replyId) {
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(replyService.deleteReply(blogId,userDetails.getUser(),replyId));
+        return ResponseEntity.status(HttpStatus.OK).body(replyService.deleteReply(blogId,userDetails.getUser(),replyId));
     }
+
+    @RequestMapping(value ="/blogs/{blogId}/replies/{replyId}/like",
+                    method = {RequestMethod.POST,RequestMethod.DELETE})
+    public ResponseEntity<ApiResponseDto> likeEvent(@PathVariable Long replyId, @AuthenticationPrincipal UserDetailsImpl userDetails, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.OK).body(replyService.likeEvent(replyId, userDetails.getUser(),request.getMethod()));
+    }
+
+
 }

@@ -17,6 +17,7 @@ public class ReplyResponseDto {
 
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+    private int likeCnt;
 
     public ReplyResponseDto(Reply reply) {
         this.id = reply.getId();
@@ -25,7 +26,7 @@ public class ReplyResponseDto {
         this.comment = reply.getComment();
         this.createdAt = reply.getCreatedAt();
         this.modifiedAt = reply.getModifiedAt();
-
+        this.likeCnt = reply.getLikeCnt();
     }
 }
 

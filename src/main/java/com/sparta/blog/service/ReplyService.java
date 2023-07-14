@@ -3,10 +3,9 @@ package com.sparta.blog.service;
 import com.sparta.blog.dto.ApiResponseDto;
 import com.sparta.blog.dto.ReplyRequestDto;
 import com.sparta.blog.dto.ReplyResponseDto;
-import com.sparta.blog.entity.Blog;
-import com.sparta.blog.entity.Reply;
-import com.sparta.blog.entity.User;
+import com.sparta.blog.entity.*;
 import com.sparta.blog.repository.BlogRepository;
+import com.sparta.blog.repository.ReplyLikeRepository;
 import com.sparta.blog.repository.ReplyRepository;
 import com.sparta.blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,7 @@ public class ReplyService {
     private final BlogRepository blogRepository;
     private final ReplyRepository replyRepository;
     private final UserRepository userRepository;
-
+    private final ReplyLikeRepository replyLikeRepository;
 
     @Transactional
     public ReplyResponseDto addReply(ReplyRequestDto requestDto, User user, Long blogId) {
@@ -70,6 +69,51 @@ public class ReplyService {
         return new ApiResponseDto(blogId + "번 게시물의" + replyId + "번째 댓글 삭제 완료");
 
     }
+    @Transactional
+    public ApiResponseDto likeEvent(Long id, User user, String requestMethod) {
+        // 해당 댓글이 DB에 존재하는지 확인
+        Reply reply = findReply(id);
+        // DB에 존재하는 유저인지 확인
+        User loginedUser = findUser(user.getUsername());
+        // 사용자가 좋아요를 눌렀는지 확인
+        ReplyLike replyLike = findReplyLike(reply, loginedUser);
+
+        //요청메서드가 POST일 때
+        if (requestMethod.equals("POST")) {
+            //유저가 댓글에 좋아요를 누르지 않은 상태의 경우
+            if(replyLike == null){
+                increaseLike(reply,loginedUser);
+                return new ApiResponseDto("댓글에 좋아요를 눌렀습니다. 좋아요 수 : "+reply.getLikeCnt());
+            }
+            //이미 유저가 해당 게시글에 좋아요를 누른 상태인 경우
+            else{
+                throw new IllegalArgumentException("이미 좋아요를 누르셨습니다. 좋아요 수 : " + reply.getLikeCnt());
+            }
+        }
+
+        else {//else if (requestMethod.equals("DELETE")) {//유저가 댓글에 좋아요를 누르지 않은 상태의 경우
+            if (replyLike == null) {
+                throw new IllegalArgumentException("좋아요를 누르지 않은 상태입니다. 좋아요 수 : " + reply.getLikeCnt());
+            }
+            //이미 유저가 해당 게시글에 좋아요를 누른 상태인 경우
+            else {
+                decreaseLike(reply, replyLike);
+                return new ApiResponseDto("이미 누른 좋아요룰 취소했습니다. 좋아요 수 : " + reply.getLikeCnt());
+            }
+        }
+    }
+    @Transactional
+    public void increaseLike(Reply reply, User user){
+        reply.increaseLike();
+        replyLikeRepository.save(new ReplyLike(reply, user));
+    }
+
+    @Transactional
+    public void decreaseLike(Reply reply, ReplyLike replyLike){
+        reply.decreaseLike();
+        replyLikeRepository.delete(replyLike);
+    }
+
 
     private Reply findReply(Long id) {
         return replyRepository.findById(id).orElseThrow(() ->
@@ -87,6 +131,10 @@ public class ReplyService {
         return userRepository.findByUsername(username).orElseThrow(() ->
                 new IllegalArgumentException("존재하지 않는 사용자 입니다.")
         );
-
     }
+    private ReplyLike findReplyLike(Reply reply, User user){
+        return replyLikeRepository.findByReplyAndUser(reply,user).orElse(null);
+    }
+
+
 }

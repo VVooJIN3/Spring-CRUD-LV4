@@ -20,6 +20,7 @@ public class BlogResponseDto{
     private String contents;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+    private int LikeCnt;
     private List<ReplyResponseDto> replies = new ArrayList<>();
     public BlogResponseDto(Blog blog){
         this.id = blog.getId();
@@ -28,6 +29,7 @@ public class BlogResponseDto{
         this.contents = blog.getContents();
         this.createdAt = blog.getCreatedAt();
         this.modifiedAt = blog.getModifiedAt();
+        this.LikeCnt = blog.getLikeCnt();
         if(blog.getReplies()!=null) {
             for (Reply reply : blog.getReplies()) {
                 replies.add(new ReplyResponseDto(reply));

@@ -1,13 +1,8 @@
 package com.sparta.blog.service;
 
 import com.sparta.blog.dto.*;
-import com.sparta.blog.entity.Reply;
-import com.sparta.blog.entity.User;
-import com.sparta.blog.repository.BlogRepository;
-import com.sparta.blog.entity.Blog;
-import com.sparta.blog.repository.ReplyRepository;
-import com.sparta.blog.repository.UserRepository;
-import org.springframework.stereotype.Component;
+import com.sparta.blog.entity.*;
+import com.sparta.blog.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,12 +12,13 @@ import java.util.List;
 public class BlogService {
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-
+    private final BlogLikeRepository blogLikeRepository;
     private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
-    public BlogService(BlogRepository blogRepository, ReplyRepository replyRepository, UserRepository userRepository) {
+    public BlogService(BlogRepository blogRepository, ReplyRepository replyRepository, UserRepository userRepository, BlogLikeRepository blogLikeRepository) {
         this.blogRepository = blogRepository;
         this.userRepository = userRepository;
+        this.blogLikeRepository =blogLikeRepository;
     }
 
     public List<BlogResponseDto> getBlogs() {
@@ -33,11 +29,9 @@ public class BlogService {
     public BlogResponseDto createBlog(BlogRequestDto requestDto, User user) {
         // DB에 존재하는 유저인지 검증
         User loginedUser = findUser(user.getUsername());
-
         Blog blog = new Blog(requestDto, loginedUser);
         blogRepository.save(blog);
         return new BlogResponseDto(blog);
-
     }
 
     @Transactional
@@ -74,6 +68,59 @@ public class BlogService {
         return new ApiResponseDto("선택한 게시글의 삭제를 완료했습니다.");
     }
 
+
+    @Transactional
+    public ApiResponseDto likeEvent(Long id, User user, String requestMethod) {
+        // 해당 게시글이 DB에 존재하는지 확인
+        Blog blog = findBlog(id);
+        // DB에 존재하는 유저인지 확인
+        User loginedUser = findUser(user.getUsername());
+
+//        if(blog.getUsername().equals(loginedUser.getUsername()))
+//            throw new IllegalArgumentException("자신이 작성한 게시글에는 좋아요를 할 수 없습니다.");
+
+        // 사용자가 좋아요를 눌렀는지 확인
+        BlogLike blogLike = findBlogLike(blog, loginedUser);
+
+        //요청메서드가 POST일 때
+        if (requestMethod.equals("POST")) {
+            //유저가 게시글에 좋아요를 누르지 않은 상태의 경우
+            if (blogLike == null) {
+                increaseLike(blog, loginedUser);
+                return new ApiResponseDto("좋아요를 눌렀습니다. 좋아요 수 : " + blog.getLikeCnt());
+            }
+            //이미 유저가 해당 게시글에 좋아요를 누른 상태인 경우
+            else {
+                throw new IllegalArgumentException("이미 좋아요를 누르셨습니다. 좋아요 수 : " + blog.getLikeCnt());
+            }
+        }
+        //요청 메서드가 DELETE일 때
+        else {//else if (requestMethod.equals("DELETE")) {
+            //유저가 게시글에 좋아요를 누르지 않은 상태의 경우
+            if (blogLike == null) {
+                throw new IllegalArgumentException("좋아요를 누르지 않은 상태입니다. 좋아요 수 : " + blog.getLikeCnt());
+            }
+            //이미 유저가 해당 게시글에 좋아요를 누른 상태인 경우
+            else {
+                decreaseLike(blog, blogLike);
+                return new ApiResponseDto("좋아요룰 취소했습니다. 좋아요 수 : " + blog.getLikeCnt());
+            }
+        }
+    }
+
+    @Transactional
+    public void increaseLike(Blog blog, User user){
+        blog.increaseLike();
+        BlogLike blogLike = new BlogLike(blog, user);
+        blogLikeRepository.save(blogLike);
+    }
+
+    @Transactional
+    public void decreaseLike(Blog blog, BlogLike blogLike){
+        blog.decreaseLike();
+        blogLikeRepository.delete(blogLike);
+    }
+
     public BlogResponseDto getBlog(Long id) {
         // 해당 게시글이 DB에 존재하는지 확인
         Blog blog = findBlog(id);
@@ -91,6 +138,9 @@ public class BlogService {
                 new IllegalArgumentException("존재하지 않는 사용자 입니다.")
         );
 
+    }
+    private BlogLike findBlogLike(Blog blog, User user){
+        return blogLikeRepository.findByBlogAndUser(blog,user).orElse(null);
     }
 
 }

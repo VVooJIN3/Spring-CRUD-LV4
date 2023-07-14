@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,17 +39,29 @@ public class Blog extends Timestamped {
     @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
     private List<Reply> replies;
 
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
+    private List<BlogLike> blogLikes;
+
+    private int likeCnt;
 
     public Blog(BlogRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
         this.username = user.getUsername();
         this.contents = requestDto.getContents();
         this.user = user;
+        this.likeCnt = 0;
     }
 
     public void update(BlogRequestDto requestDto) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
+    }
+
+    public void increaseLike(){
+        this.likeCnt++;
+    }
+    public void decreaseLike(){
+        this.likeCnt--;
     }
 
 

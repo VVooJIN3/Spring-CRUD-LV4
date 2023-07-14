@@ -3,6 +3,7 @@ package com.sparta.blog.controller;
 import com.sparta.blog.dto.*;
 import com.sparta.blog.security.UserDetailsImpl;
 import com.sparta.blog.service.BlogService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
@@ -56,7 +57,14 @@ public class BlogController {
     //게시글 삭제(선택 id)
     @DeleteMapping("/blogs/{blogId}")
     public ResponseEntity<ApiResponseDto> deleteBlog(@PathVariable Long blogId,@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(blogService.deleteBlog(blogId,userDetails.getUser()));
+        return ResponseEntity.status(HttpStatus.OK).body(blogService.deleteBlog(blogId,userDetails.getUser()));
+    }
+
+    //좋아요 클릭 이벤트(증가 또는 감소)
+    @RequestMapping(value = "/blogs/{blogId}/like",
+                    method = {RequestMethod.POST, RequestMethod.DELETE})
+    public ResponseEntity<ApiResponseDto> likeEvent(@PathVariable Long blogId, @AuthenticationPrincipal UserDetailsImpl userDetails, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.CREATED).body(blogService.likeEvent(blogId, userDetails.getUser(),request.getMethod()));
     }
 
 }

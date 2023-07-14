@@ -10,10 +10,7 @@ import java.util.List;
 @Repository
 public interface ReplyRepository extends JpaRepository<Reply, Long> {
     List<Reply> findAllByOrderByModifiedAtDesc();
-    private Reply findReply(Long id) {
-        return findById(id).orElseThrow(() ->
-                new IllegalArgumentException("선택한 댓글은 존재하지 않습니다.")
-        );
-    }
+
+
 }
 

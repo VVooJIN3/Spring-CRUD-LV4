@@ -24,14 +24,6 @@ public class ReplyController {
         this.replyService = replyService;
     }
 
-
-    //예외처리 메서드
-    //컨트롤러 내 API가 호출되다가 Exception 발생 시, 코드 실행
-    @ExceptionHandler
-    public ResponseEntity<ApiResponseDto> handleException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponseDto(ex.getMessage()));
-    }
-
     @PostMapping("/blogs/{blogId}/replies")
     public ResponseEntity<ReplyResponseDto> addReply(@RequestBody ReplyRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long blogId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(replyService.addReply(requestDto, userDetails.getUser(), blogId));

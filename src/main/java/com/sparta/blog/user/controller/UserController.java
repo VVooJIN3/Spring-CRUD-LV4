@@ -24,13 +24,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    //예외처리 메서드
-    //컨트롤러 내 API가 호출되다가 Exception 발생 시, 코드 실행
-    @ExceptionHandler
-    public ResponseEntity<ApiResponseDto> handleException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponseDto(ex.getMessage()));
-    }
-
     @GetMapping("/user/login-page")
     public String loginPage() {
         return "로그인 페이지";

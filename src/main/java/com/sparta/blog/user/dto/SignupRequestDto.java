@@ -1,5 +1,6 @@
 package com.sparta.blog.user.dto;
 
+import com.sparta.blog.user.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -25,4 +26,10 @@ public class SignupRequestDto {
     private String email;
     private boolean admin = false;
     private String adminToken = "";
+
+    public SignupRequestDto(User newUser) {
+        this.username = newUser.getUsername();
+        this.password = newUser.getPassword();
+        this.email = newUser.getEmail();
+    }
 }

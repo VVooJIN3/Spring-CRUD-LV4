@@ -158,7 +158,8 @@ Goal:  "Spring Security를 적용한 나만의 항해 블로그 백엔드 서버
 
 # ER다이어그램
 
-![img.png](img.png)
+![image](https://github.com/VVooJIN3/Spring-CRUD-LV4/assets/131952511/3340c0de-2e17-42d8-9bfb-ddf7e3b0c175)
+
 
 # 완료한 기능
 - 게시글/ 댓글 좋아요 기능 추가

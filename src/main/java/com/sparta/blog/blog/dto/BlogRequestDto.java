@@ -1,16 +1,21 @@
 package com.sparta.blog.blog.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class BlogRequestDto {
     private String title;
-//    private String username;
+    //    private String username;
     private String contents;
 //    private LocalDateTime dateTime;
 //    private LocalDateTime updateDateTime;
+
+    @Builder
+    public BlogRequestDto(String title, String contents) {
+        this.title = title;
+        this.contents = contents;
+    }
 }

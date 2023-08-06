@@ -1,8 +1,8 @@
 package com.sparta.blog;
 
+import com.sparta.blog.common.dto.ApiResponseDto;
 import com.sparta.blog.user.dto.SignupRequestDto;
 import com.sparta.blog.user.entity.User;
-import com.sparta.blog.user.entity.UserRoleEnum;
 import com.sparta.blog.user.repository.UserRepository;
 import com.sparta.blog.user.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,11 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 
 @RunWith(MockitoJUnitRunner.class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -39,19 +36,24 @@ class UserServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @DisplayName("insertUser Test")
+    @DisplayName("Signup Test")
     @Test
-    void insertUser_ValidUser_Success() {
+    void signupTest() {
         // given
-        var newUser = User.builder().username("user1").password("password1").email("test1@gmail.com").role(UserRoleEnum.USER).build();
-        given(userRepository.findByUsername(eq(newUser.getUsername()))).willReturn(Optional.empty()); // findById 메소드가 newUser.getId()로 호출될 때, 빈 Optional을 반환하도록 설정.
-        given(userRepository.save(any())).willReturn(newUser); //save메소드가 어떤 User객체로 호출되든, 주어진 newUser객체를 반환하도록 설정
+//        var newUser = User.builder().username("user1").password("password1").email("test1@gmail.com").role(UserRoleEnum.USER).build();
+        String username = "user1";
+        String password = passwordEncoder.encode("password1");
+        String email = "test1@gmail.com";
+        SignupRequestDto signupRequestDto = new SignupRequestDto(username, password, email);
+        Optional<User> existingUser = userRepository.findByUserId(Long.valueOf(1));
 
-        SignupRequestDto signupRequestDto = new SignupRequestDto(newUser);
+        given(userRepository.findByUsername(username)).willReturn(Optional.empty()); // findByUsername 메소드가 빈 Optional을 반환하도록 설정.
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty()); // findByEmail 메소드가 빈 Optional을 반환하도록 설정.
+
         // when
-        userService.signup(signupRequestDto);
+        ApiResponseDto response = userService.signup(signupRequestDto);
 
         // then
-        then(userRepository).should(times(1)).save(newUser);
+        assertEquals("회원가입 완료", response.getMessage());
     }
 }

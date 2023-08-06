@@ -32,4 +32,10 @@ public class SignupRequestDto {
         this.password = newUser.getPassword();
         this.email = newUser.getEmail();
     }
+
+    public SignupRequestDto(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = password;
+    }
 }
